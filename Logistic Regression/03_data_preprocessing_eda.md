@@ -63,10 +63,6 @@ $$
 ---
 
 ## 3. Cài Đặt Thủ Công (Không Dùng `sklearn.preprocessing`)
-
-
-`StandardScaler` và `OneHotEncoder` chỉ tốn 1-2 dòng code để gọi, nhưng lại che giấu công thức toán phía sau. Phần dưới đây cài đặt lại 2 kỹ thuật quan trọng nhất ở Step 2 và Step 3 chỉ bằng `pandas`/`numpy` thuần, để hiểu rõ cơ chế trước khi dùng thư viện.
-
 ### 3.1. Tự cài đặt Standardization (thay cho `StandardScaler`)
 
 ```python
