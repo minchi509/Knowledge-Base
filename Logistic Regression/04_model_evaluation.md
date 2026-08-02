@@ -82,11 +82,8 @@ Khi tập dữ liệu bị mất cân bằng nhãn nghiêm trọng (lớp Positi
 
 ## 4. Cài Đặt Thủ Công Các Chỉ Số Đánh Giá (Không Dùng `sklearn.metrics`)
 
-### 4.1. Vì sao cần tự tính tay?
 
-Ở mục 5 (Standard Evaluation Routine), ta sẽ gọi thẳng `classification_report`, `confusion_matrix`, `roc_auc_score` từ `sklearn.metrics`. Các hàm này chỉ tốn 1 dòng code nhưng lại **che giấu** cách các chỉ số Accuracy, Precision, Recall, F1, ROC-AUC ở mục 2 và 3 thực sự được tính ra sao từ TP, TN, FP, FN. Phần dưới đây cài đặt lại toàn bộ chỉ bằng NumPy để đối chiếu trực tiếp với công thức toán đã nêu.
-
-### 4.2. Tự tính Confusion Matrix và các chỉ số cơ bản
+### 4.1. Tự tính Confusion Matrix và các chỉ số cơ bản
 
 ```python
 import numpy as np
@@ -135,7 +132,7 @@ def classification_metrics_scratch(y_true, y_pred):
 | `recall` | $\text{Recall} = \dfrac{TP}{TP+FN}$ (mục 2.3) |
 | `f1` | $F_1 = \dfrac{2 \cdot TP}{2 \cdot TP + FP + FN}$ (mục 2.4) |
 
-### 4.3. Tự tính ROC Curve và ROC-AUC (thuật toán quét ngưỡng)
+### 4.2. Tự tính ROC Curve và ROC-AUC (thuật toán quét ngưỡng)
 
 ROC-AUC không có một công thức đóng (closed-form) đơn giản để tính trực tiếp từ dữ liệu — cách nó được tính thực chất là **quét qua nhiều ngưỡng quyết định** (threshold) từ $1.0$ về $0.0$, tại mỗi ngưỡng tính lại TPR và FPR, sau đó lấy diện tích dưới đường cong bằng quy tắc hình thang (Trapezoidal Rule):
 
@@ -176,9 +173,7 @@ def roc_auc_scratch(y_true, y_proba, n_thresholds=100):
     return auc
 ```
 
-**Giải thích ý tưởng**: mỗi khi hạ ngưỡng quyết định `t` xuống một chút, mô hình sẽ "dễ dãi" hơn khi gán nhãn Positive → TPR (Recall) và FPR đều tăng dần. Vẽ toàn bộ các cặp (FPR, TPR) này ra đồ thị chính là đường cong ROC ở mục 3.1; diện tích bên dưới nó chính là ROC-AUC.
-
-### 4.4. Đối chiếu với `sklearn.metrics` để kiểm chứng
+### 4.3. Đối chiếu với `sklearn.metrics` để kiểm chứng
 
 ```python
 from sklearn.metrics import (
