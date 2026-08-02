@@ -1,9 +1,10 @@
 ---
 topic: "Logistic Regression"
-subtopic: "Common Pitfalls, Troubleshooting & Best Practices"
+subtopic: "Common Pitfalls, Troubleshooting & Best Practices (kèm minh họa/cài đặt thủ công)"
 level: "Intermediate/Advanced"
 doc_id: "logreg_05"
 sources:
+  - "Tự triển khai minh họa Data Leakage và VIF dựa trên công thức toán ở chính tài liệu này"
   - "Scikit-Learn Official User Guide: Common Pitfalls"
 ---
 
@@ -72,6 +73,36 @@ scores = cross_val_score(
 )
 ```
 
+### Minh Họa Bằng Số Liệu Cụ Thể (Tự Tính Tay, Không Dùng `StandardScaler`)
+
+Để thấy rõ "rò rỉ" nằm ở đâu, ta tự tính tay $\mu$ và $\sigma$ theo 2 cách — **sai** (gộp cả Test) và **đúng** (chỉ dùng Train) — rồi so sánh:
+
+```python
+import numpy as np
+
+# Giả lập một cột dữ liệu duy nhất để minh họa
+np.random.seed(42)
+X_train = np.random.normal(loc=50, scale=10, size=80)   # 80 mẫu Train
+X_test = np.random.normal(loc=70, scale=15, size=20)     # 20 mẫu Test (phân phối khác Train)
+
+# ---- CÁCH SAI: tính mu, sigma trên TOÀN BỘ dữ liệu (Train + Test) ----
+X_all = np.concatenate([X_train, X_test])
+mu_leak = X_all.mean()
+sigma_leak = X_all.std()
+X_train_leak = (X_train - mu_leak) / sigma_leak
+
+# ---- CÁCH ĐÚNG: tính mu, sigma CHỈ trên Train ----
+mu_correct = X_train.mean()
+sigma_correct = X_train.std()
+X_train_correct = (X_train - mu_correct) / sigma_correct
+
+print(f"mu tính đúng (chỉ Train)  : {mu_correct:.3f}")
+print(f"mu bị rò rỉ (Train+Test)  : {mu_leak:.3f}")
+print(f"Sai lệch do leakage        : {abs(mu_correct - mu_leak):.3f}")
+```
+
+**Quan sát**: vì `X_test` có phân phối khác (`loc=70` thay vì `50`), `mu_leak` bị "kéo lệch" về phía thông tin của tập Test — đây chính là cách mô hình "nhìn trộm" được đặc điểm của dữ liệu nó chưa từng thấy, khiến điểm đánh giá trên Test trông cao giả tạo.
+
 ---
 
 ## 3. Multicollinearity Detection with VIF
@@ -110,6 +141,63 @@ def check_multicollinearity(X_df):
     ]
     return vif_data.sort_values(by="VIF", ascending=False)
 ```
+
+### Tự Cài Đặt VIF (Không Dùng `statsmodels`)
+
+Bản trên gọi thẳng `variance_inflation_factor` của `statsmodels`. Để hiểu rõ $R_i^2$ trong công thức VIF đến từ đâu, ta tự cài đặt hồi quy tuyến tính bằng **Phương trình chuẩn (Normal Equation)** — $\boldsymbol{\beta} = (\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\mathbf{y}$ — để tự tính $R_i^2$ rồi suy ra VIF:
+
+```python
+import numpy as np
+import pandas as pd
+
+def r_squared_scratch(X_others, y_feature):
+    """
+    Tự hồi quy tuyến tính (Normal Equation) của đặc trưng x_i theo các đặc trưng
+    còn lại, sau đó tính R^2, không dùng statsmodels hay sklearn.
+    """
+    n = X_others.shape[0]
+    X_with_bias = np.column_stack([np.ones(n), X_others])  # thêm cột bias
+
+    # Phương trình chuẩn: beta = (X^T X)^-1 X^T y
+    XtX = X_with_bias.T @ X_with_bias
+    XtX_inv = np.linalg.pinv(XtX)  # dùng pinv để tránh lỗi ma trận suy biến
+    beta = XtX_inv @ X_with_bias.T @ y_feature
+
+    y_pred = X_with_bias @ beta
+    ss_res = np.sum((y_feature - y_pred) ** 2)          # Tổng bình phương phần dư
+    ss_tot = np.sum((y_feature - y_feature.mean()) ** 2)  # Tổng bình phương toàn phần
+
+    r2 = 1 - ss_res / (ss_tot + 1e-15)
+    return r2
+
+
+def check_multicollinearity_scratch(X_df):
+    """
+    Tự tính VIF cho từng cột: VIF_i = 1 / (1 - R_i^2)
+    """
+    results = []
+    columns = X_df.columns
+    X_values = X_df.values
+
+    for i, col in enumerate(columns):
+        y_feature = X_values[:, i]                          # đặc trưng x_i làm "target"
+        X_others = np.delete(X_values, i, axis=1)            # các đặc trưng còn lại
+
+        r2_i = r_squared_scratch(X_others, y_feature)
+        vif_i = 1 / (1 - r2_i + 1e-15)
+        results.append({"Feature": col, "VIF": vif_i})
+
+    return pd.DataFrame(results).sort_values(by="VIF", ascending=False)
+
+
+# --- Đối chiếu với statsmodels ---
+vif_scratch = check_multicollinearity_scratch(X_df)
+vif_statsmodels = check_multicollinearity(X_df)  # hàm dùng statsmodels ở trên
+print("So sánh 2 kết quả (giá trị VIF phải xấp xỉ bằng nhau):")
+print(vif_scratch.merge(vif_statsmodels, on="Feature", suffixes=("_scratch", "_statsmodels")))
+```
+
+**Lưu ý**: bản tự cài đặt dùng `np.linalg.pinv` (pseudo-inverse) thay vì nghịch đảo ma trận thông thường để tránh lỗi khi các đặc trưng cộng tuyến gần như hoàn hảo (ma trận $\mathbf{X}^T\mathbf{X}$ gần suy biến) — đây cũng chính là biểu hiện toán học của hiện tượng đa cộng tuyến mà VIF đang muốn đo lường.
 
 ---
 
