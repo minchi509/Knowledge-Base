@@ -37,24 +37,28 @@ def visualize_decision_tree(model, feature_names, class_names):
     )
     plt.title("Cấu trúc Cây Quyết Định", fontsize=18)
     plt.show()
-1.2. Xuất luật quyết định bằng export_text
+```
+### 1.2. Xuất luật quyết định bằng export_text
 Đôi khi việc nhúng các luật (Rules) vào hệ thống backend (Java/C#) yêu cầu định dạng văn bản thô.
 
 Python
 from sklearn.tree import export_text
 tree_rules = export_text(model, feature_names=list(X.columns))
 print(tree_rules)
+```
 # Output ví dụ:
 # |--- Tuổi <= 30.50
 # |   |--- Thu_nhập <= 1500.00
 # |   |   |--- class: 0
 # |   |--- Thu_nhập >  1500.00
 # |   |   |--- class: 1
-2. Truy vết đường dẫn quyết định (Decision Path)
+```
+
+## 2. Truy vết đường dẫn quyết định (Decision Path)
 Scikit-learn cung cấp hàm decision_path(X) để theo dõi một bệnh nhân/khách hàng cụ thể đã đi qua những nút (nút điều kiện) nào trước khi đạt tới quyết định cuối cùng.
 
 Python
-# Lấy ra đường dẫn cho mẫu dữ liệu đầu tiên
+Lấy ra đường dẫn cho mẫu dữ liệu đầu tiên
 sample_id = 0
 node_indicator = model.decision_path(X_test)
 leave_id = model.apply(X_test)
