@@ -1,8 +1,4 @@
 ---
-
-### File 2: Scikit-Learn API & Hyperparameters
-```markdown
----
 topic: "K-Means Clustering"
 subtopic: "Scikit-Learn API & Hyperparameters"
 level: "Intermediate"
