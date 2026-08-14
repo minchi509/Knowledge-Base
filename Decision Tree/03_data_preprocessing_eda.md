@@ -1,8 +1,4 @@
 ---
-
-### File 3: Preprocessing & Feature Importance
-```markdown
----
 topic: "Decision Tree"
 subtopic: "Data Preprocessing, Encoding & Feature Importance"
 level: "Intermediate"
