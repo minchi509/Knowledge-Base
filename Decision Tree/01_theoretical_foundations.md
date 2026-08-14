@@ -23,11 +23,57 @@ Scikit-Learn sử dụng phiên bản tối ưu của thuật toán **CART (Clas
 Để quyết định phân tách tại đặc trưng $j$ với ngưỡng $t$, thuật toán CART tính toán hàm mất mát (Impurity) của nút cha và các nút con. Mục tiêu là cực tiểu hóa độ mất mát này.
 
 ### 2.1. Gini Impurity (Chỉ số Gini)
+
 Được sử dụng làm mặc định vì tốc độ tính toán nhanh (không chứa hàm logarit). Gini đo lường xác suất một mẫu ngẫu nhiên bị phân loại sai nếu nó được gán nhãn ngẫu nhiên theo phân phối nhãn tại nút đó.
+
 Tại nút $m$ có $K$ lớp, tỉ lệ mẫu thuộc lớp $k$ là $p_{mk}$.
+
 $$H_{\text{Gini}}(m) = \sum_{k=1}^{K} p_{mk} (1 - p_{mk}) = 1 - \sum_{k=1}^{K} p_{mk}^2$$
+
 * Tính chất: Gini bằng $0$ khi nút hoàn toàn thuần nhất (chỉ chứa 1 lớp). Đạt cực đại ở $1 - (1/K)$ khi các lớp phân bố đều nhau.
 
+#### Cài đặt hàm tính Gini Impurity bằng NumPy thủ công (From Scratch)
+
+```python
+import numpy as np
+
+def calculate_gini_scratch(y):
+    """
+    Tính Gini Impurity cho mảng nhãn y
+    """
+    if len(y) == 0:
+        return 0.0
+    
+    # Tính tỷ lệ xuất hiện p_k của từng lớp
+    _, counts = np.unique(y, return_counts=True)
+    probabilities = counts / len(y)
+    
+    # Công thức: Gini = 1 - sum(p_k^2)
+    gini = 1.0 - np.sum(probabilities ** 2)
+    return gini
+```
+
+#### Ví dụ minh họa: Mảng nhãn gồm 4 mẫu lớp 0 và 1 mẫu lớp 1
+
+```python
+y_sample = np.array([0, 0, 0, 0, 1])
+
+print(
+    f"Gini Impurity thủ công: "
+    f"{calculate_gini_scratch(y_sample):.4f}"
+)
+
+# Output:
+# Gini Impurity thủ công: 0.3200
+```
+
+### 2.2. Entropy (Độ hỗn loạn thông tin)
+
+Lấy cảm hứng từ Lý thuyết Thông tin của Shannon, Entropy đo lường mức độ bất định (uncertainty) tại một nút:
+
+$$H_{\text{Entropy}}(m) = - \sum_{k=1}^{K} p_{mk} \log_2(p_{mk})$$
+
+*(Quy ước: $0 \log_2(0) = 0$)*
 ### 2.2. Entropy (Độ hỗn loạn thông tin)
 Lấy cảm hứng từ Lý thuyết Thông tin của Shannon, Entropy đo lường mức độ bất định (uncertainty) tại một nút:
 $$H_{\text{Entropy}}(m) = - \sum_{k=1}^{K} p_{mk} \log_2(p_{mk})$$
