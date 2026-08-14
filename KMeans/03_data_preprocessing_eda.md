@@ -1,46 +1,47 @@
 ---
 topic: "K-Means Clustering"
-subtopic: "Data Preprocessing, Scaling & Outliers"
+subtopic: "Data Preprocessing, Feature Scaling & Dimensionality Reduction"
 level: "Intermediate"
 doc_id: "km_03"
 sources:
   - "Scikit-Learn User Guide: Preprocessing"
 key_concepts:
-  - "Distance Metric Sensitivity"
+  - "Euclidean Distance Distortion"
   - "StandardScaler"
-  - "Outlier Impact"
+  - "Outlier Sensitivity"
+  - "PCA Integration"
 ---
 
-# Preprocessing Guidelines for K-Means
+# Preprocessing & Dimensionality Reduction Guidelines
 
-## 1. Mức độ nhạy cảm với Thang đo (Scale Sensitivity)
-**Nguyên tắc vàng:** K-Means bắt buộc phải được chuẩn hóa dữ liệu trước khi huấn luyện.
-*Giải thích*: K-Means sử dụng khoảng cách Euclidean. Giả sử tập dữ liệu *Mall Customer* có cột `Tuổi` (phạm vi từ $18$ đến $70$) và `Thu nhập hàng năm` (phạm vi từ $15,000$ đến $137,000$ USD). Biến số `Thu nhập` có độ lớn áp đảo hoàn toàn biến `Tuổi`. Khi tính khoảng cách, thuật toán gần như chỉ quan tâm đến sự chênh lệch thu nhập mà phớt lờ độ tuổi.
+## 1. Mức độ nhạy cảm với Thang đo (Scaling Sensitivity)
+K-Means dựa hoàn toàn vào khoảng cách Euclidean $d(x, y) = \sqrt{\sum (x_i - y_i)^2}$.
+Nếu một đặc trưng có biên độ lớn (ví dụ `Annual Income` từ $15,000 - $130,000) và đặc trưng khác có biên độ nhỏ (ví dụ `Age` từ $18 - 70$), khoảng cách Euclidean sẽ bị chi phối $99.9\%$ bởi `Annual Income`. `Age` gần như không có đóng góp gì vào việc phân cụm.
 
-**Giải pháp:** Áp dụng `StandardScaler` (hoặc `MinMaxScaler`) để đưa tất cả các biến về cùng một phương sai và trung bình.
+**Bắt buộc**: Luôn chuẩn hóa dữ liệu bằng `StandardScaler` trước khi đưa vào K-Means.
 
-## 2. Xử lý Nhiễu (Outliers)
-K-Means vô cùng nhạy cảm với Outliers. Vì thuật toán tối ưu hóa "bình phương khoảng cách" (Sum of Squares), một điểm nhiễu nằm quá xa sẽ kéo lệch vị trí của tâm cụm (centroid) về phía nó, làm méo mó hình dạng của toàn bộ cụm.
-**Giải pháp trong quá trình EDA:**
-* Sử dụng Boxplot để phát hiện Outliers.
-* Loại bỏ (Drop) Outliers trước khi đưa vào mô hình, hoặc đổi sang thuật toán K-Medoids (sử dụng trung vị thay vì trung bình).
+## 2. Ảnh hưởng của Outliers
+Vì WCSS tính **bình phương** khoảng cách $\Vert{}x_i - \mu_j\Vert{}^2$, một điểm dữ liệu ngoại lệ nằm cực xa sẽ đóng góp giá trị WCSS rất lớn. Thuật toán sẽ bị ép phải kéo centroid về phía điểm ngoại lệ đó, làm sai lệch cấu trúc của toàn bộ cụm.
+* **Xử lý**: Loại bỏ outliers bằng IQR/Z-score trước khi gom cụm, hoặc đổi sang `DBSCAN` nếu dữ liệu có nhiều nhiễu.
 
-## 3. Production Pipeline for Clustering
-Đối với biến phân loại (như `Gender` trong Mall Customer), K-Means chuẩn không xử lý tốt (do khoảng cách giữa 'Male' và 'Female' là vô nghĩa trên không gian liên tục). Ở mức Intermediate, ta thường mã hóa nhị phân (0-1) cho biến có 2 giá trị, hoặc chỉ dùng các biến số thực (`Age`, `Annual Income`, `Spending Score`) để gom cụm.
+## 3. Kết hợp PCA khi dữ liệu nhiều chiều (High-Dimensional Data)
+Khi dữ liệu có $>10$ đặc trưng, khoảng cách Euclidean chịu hiện tượng **Lời nguyền chiều dữ liệu (Curse of Dimensionality)**: khoảng cách giữa mọi cặp điểm dần tiến về bằng nhau, khiến K-Means mất khả năng phân cụm.
+Giải pháp chuẩn: Dùng **PCA (Principal Component Analysis)** để giảm chiều dữ liệu về 2-5 thành phần chính trước khi gom cụm.
 
 ```python
-from sklearn.pipeline import Pipeline
+from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import Pipeline
 from sklearn.cluster import KMeans
 
-# Xây dựng Pipeline chuẩn mực (Vừa Scale vừa Cluster)
-clustering_pipeline = Pipeline([
+# Pipeline đầy đủ: Scale -> PCA (Giữ 90% phương sai) -> K-Means
+complete_pipeline = Pipeline([
     ('scaler', StandardScaler()),
+    ('pca', PCA(n_components=0.90, random_state=42)),
     ('kmeans', KMeans(n_clusters=5, init='k-means++', random_state=42))
 ])
 
-# Dữ liệu khách hàng
-X_mall = df[['Age', 'Annual Income (k$)', 'Spending Score (1-100)']]
-
-# Chạy pipeline
-cluster_labels = clustering_pipeline.fit_predict(X_mall)
+# Fit pipeline trên dữ liệu Mall Customers đa chiều
+# df_features gồm: Age, Annual Income, Spending Score, Male_binary
+cluster_labels = complete_pipeline.fit_predict(X_multi_dim)
+print(f"Số chiều sau PCA: {complete_pipeline.named_steps['pca'].n_components_}")
