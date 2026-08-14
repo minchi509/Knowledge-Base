@@ -1,4 +1,8 @@
 ---
+
+### File 2: Scikit-Learn API & Hyperparameters
+```markdown
+---
 topic: "K-Means Clustering"
 subtopic: "Scikit-Learn API & Hyperparameters"
 level: "Intermediate"
@@ -7,51 +11,64 @@ sources:
   - "Scikit-Learn API: sklearn.cluster.KMeans"
 key_concepts:
   - "n_clusters"
-  - "init='k-means++'"
+  - "init"
   - "n_init"
   - "max_iter"
+  - "tol"
 ---
 
-# Scikit-Learn API & Hyperparameters
+# Scikit-Learn API & Hyperparameter Matrix
 
-## 1. Main Class Specification
+## 1. Class Specification
 Lớp chính: `sklearn.cluster.KMeans`.
-* `.fit(X)`: Tìm các tâm cụm trên dữ liệu huấn luyện. (Không có $y$).
-* `.predict(X)`: Dự đoán cụm cho các mẫu dữ liệu mới.
-* `.fit_predict(X)`: Huấn luyện và trả về nhãn cụm cho chính tập $X$.
-* `.cluster_centers_`: Thuộc tính chứa tọa độ của $K$ tâm cụm sau khi hội tụ.
-* `.inertia_`: Giá trị WCSS cuối cùng.
+* `.fit(X)`: Tìm vị trí tâm cụm tối ưu từ dữ liệu $X$.
+* `.fit_predict(X)`: Huấn luyện và trả về nhãn cụm cho tập $X$.
+* `.transform(X)`: Biến đổi $X$ thành không gian $K$ chiều, đại diện cho khoảng cách từ từng mẫu đến $K$ tâm cụm.
+* `.cluster_centers_`: Numpy array shape `(n_clusters, n_features)` chứa tọa độ các centroid.
+* `.inertia_`: Giá trị WCSS tối ưu đạt được.
 
 ## 2. Hyperparameter Configuration Matrix
 
-| Tham số | Mặc định | Ý nghĩa & Lời khuyên tối ưu |
-| :--- | :--- | :--- |
-| `n_clusters` | `8` | Số lượng cụm $K$. Đây là tham số quan trọng nhất, cần xác định bằng thuật toán (Elbow/Silhouette) chứ không đoán mò. |
-| `init` | `'k-means++'` | Thuật toán khởi tạo tâm cụm. Mặc định là `'k-means++'` giúp các tâm cụm ban đầu cách xa nhau, tránh rơi vào cực tiểu cục bộ (Random Initialization Trap). **Luôn giữ mặc định này**. |
-| `n_init` | `'auto'` | Số lần thuật toán chạy độc lập với các khởi tạo ngẫu nhiên khác nhau. Kết quả trả về là lần chạy có `inertia_` thấp nhất. (Nên đặt $>10$ nếu không dùng k-means++). |
-| `max_iter` | `300` | Số vòng lặp tối đa cho một lần chạy. K-Means thường hội tụ rất nhanh, $300$ là quá đủ. |
-| `random_state` | `None` | Cố định hạt giống ngẫu nhiên để đảm bảo tính tái lập kết quả khi sinh Notebook bài tập. |
+| Tham số | Kiểu dữ liệu | Mặc định | Mức độ ảnh hưởng & Hướng dẫn cấu hình |
+| :--- | :--- | :--- | :--- |
+| `n_clusters` | `int` | `8` | Số cụm $K$. Tham số quan trọng nhất. Cần kết hợp Elbow Method và Silhouette Analysis để chọn. |
+| `init` | `str` / `array` | `'k-means++'` | Phương pháp khởi tạo tâm: `'k-means++'`, `'random'` hoặc mảng tọa độ ban đầu. **Luôn dùng `'k-means++'`**. |
+| `n_init` | `int` / `str` | `'auto'` | Số lần chạy thuật toán độc lập với các hạt giống khác nhau. Bản chạy có `inertia_` thấp nhất sẽ được giữ lại. (Khuyên dùng $10$). |
+| `max_iter` | `int` | `300` | Số vòng lặp tối đa trong 1 lần chạy. Nếu mô hình chưa hội tụ, tăng lên $500$. |
+| `tol` | `float` | `1e-4` | Ngưỡng dung sai về sự thay đổi vị trí tâm cụm để xác định thuật toán đã hội tụ. |
+| `algorithm` | `str` | `'lloyd'` | Algorithmic variant: `'lloyd'` hoặc `'elkan'`. `'elkan'` nhanh hơn trên dữ liệu có cụm rõ ràng nhờ bất đẳng thức tam giác. |
 
-## 3. Implementation Example
+## 3. Production Executable Pipeline
 
 ```python
-from sklearn.cluster import KMeans
 import numpy as np
+import pandas as pd
+from sklearn.datasets import make_blobs
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import Pipeline
+from sklearn.cluster import KMeans
 
-# Giả lập dữ liệu khách hàng (Thu nhập, Điểm chi tiêu)
-X = np.random.rand(100, 2) * 100 
+# 1. Tạo dữ liệu giả lập 3 cụm
+X, _ = make_blobs(n_samples=500, centers=3, cluster_std=0.8, random_state=42)
 
-# Khởi tạo mô hình
-kmeans = KMeans(
-    n_clusters=5, 
-    init='k-means++', 
-    n_init='auto', 
-    random_state=42
-)
+# 2. Định nghĩa Production Pipeline với Scaling
+pipeline = Pipeline([
+    ('scaler', StandardScaler()),
+    ('kmeans', KMeans(
+        n_clusters=3,
+        init='k-means++',
+        n_init=10,
+        max_iter=300,
+        tol=1e-4,
+        random_state=42
+    ))
+])
 
-# Huấn luyện và gán nhãn
-cluster_labels = kmeans.fit_predict(X)
+# 3. Fit và trích xuất thông tin
+labels = pipeline.fit_predict(X)
+kmeans_model = pipeline.named_steps['kmeans']
 
-print("Tọa độ tâm cụm (Centroids):")
-print(kmeans.cluster_centers_)
-print(f"Tổng bình phương khoảng cách (Inertia): {kmeans.inertia_:.2f}")
+print(f"WCSS (Inertia): {kmeans_model.inertia_:.2f}")
+print(f"Số vòng lặp hội tụ: {kmeans_model.n_iter_}")
+print("Tọa độ Centroid (đã Scale):")
+print(kmeans_model.cluster_centers_)
