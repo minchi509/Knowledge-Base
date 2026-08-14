@@ -1,8 +1,4 @@
 ---
-
-### File 4: Diagnostics & Visualization
-```markdown
----
 topic: "Decision Tree"
 subtopic: "Tree Diagnostics & Interpretability"
 level: "Intermediate"
