@@ -6,11 +6,12 @@ doc_id: "logreg_04"
 source_url: "https://scikit-learn.org/stable/modules/model_evaluation.html"
 scikit_learn_version: "1.4"
 key_concepts:
-  - "ConvergenceWarning & Cách khắc phục tối ưu hóa"
-  - "Phòng tránh rò rỉ dữ liệu với Pipeline"
-  - "Đa cộng tuyến & Hệ số phóng đại phương sai (VIF)"
-  - "Tự tính VIF & minh họa rò rỉ dữ liệu bằng số liệu"
-  - "Danh mục kiểm tra sẵn sàng triển khai"
+  - "Ma trận nhầm lẫn (TP, TN, FP, FN)"
+  - "Accuracy, Precision, Recall, F1-Score"
+  - "Đường cong ROC & Chỉ số ROC-AUC"
+  - "Đường cong Precision-Recall (PR)"
+  - "Tự tính toán chỉ số từ đầu bằng NumPy"
+  - "Quy trình đánh giá chuẩn với Scikit-Learn & Matplotlib"
 ---
 
 # Đánh Giá Mô Hình & Chẩn Đoán Phân Loại Cho Logistic Regression
