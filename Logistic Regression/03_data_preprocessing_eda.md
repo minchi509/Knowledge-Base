@@ -6,12 +6,12 @@ doc_id: "logreg_03"
 source_url: "https://scikit-learn.org/stable/modules/preprocessing.html"
 scikit_learn_version: "1.4"
 key_concepts:
-  - "Feature Scaling (StandardScaler & RobustScaler)"
-  - "Dummy Variable Trap & Categorical Encoding"
-  - "Multicollinearity & Data Imputation"
-  - "From-Scratch Standardization & One-Hot Encoding"
-  - "Class Imbalance Mitigation (Loss Weighting & Thresholding)"
-  - "Production Pipeline with ColumnTransformer"
+  - "Chuẩn hóa đặc trưng (StandardScaler & RobustScaler)"
+  - "Bẫy biến giả & Mã hóa biến phân loại"
+  - "Đa cộng tuyến & Điền khuyết dữ liệu"
+  - "Tự cài đặt Chuẩn hóa & One-Hot Encoding từ đầu"
+  - "Xử lý mất cân bằng lớp (Trọng số Loss & Ngưỡng quyết định)"
+  - "Pipeline thực chiến với ColumnTransformer"
 ---
 
 # Tiền Xử Lý Dữ Liệu & Pipeline Hoàn Chỉnh Cho Logistic Regression
