@@ -13,7 +13,7 @@ key_concepts:
   - "Danh mục Kiểm định Triển khai (Production Readiness Checklist)"
 ---
 
-# Common Pitfalls & Pruning Practices
+# Những Sai Lầm Thường Gặp & Thực Hành Cắt Tỉa Cây (Common Pitfalls & Pruning Practices)
 
 ## 1. High Variance & Overfitting Syndrome (Phương sai cao & Quá khớp)
 
@@ -84,7 +84,7 @@ $$\alpha_{\text{eff}} = \frac{R(t) - R(T_t)}{\vert{}T_t\vert{} - 1}$$
 
 ---
 
-## 4. Complete Executable Code: Cost-Complexity Pruning Path & Tuning
+## 4. Mã Nguồn Đầy Đủ Có Thể Chạy: Đường Dẫn Cắt Tỉa & Tinh Chỉnh (Complete Executable Code: Cost-Complexity Pruning Path & Tuning)
 
 Đoạn mã dưới đây minh họa quy trình trích xuất chuỗi $\alpha$ ứng viên và dùng GridSearchCV để tìm giá trị `ccp_alpha` tối ưu.
 
