@@ -6,11 +6,11 @@ doc_id: "logreg_05"
 source_url: "https://scikit-learn.org/stable/common_pitfalls.html"
 scikit_learn_version: "1.4"
 key_concepts:
-  - "ConvergenceWarning & Optimization Fixes"
-  - "Data Leakage Prevention with Pipeline"
-  - "Multicollinearity & Variance Inflation Factor (VIF)"
-  - "From-Scratch VIF & Leakage Numerical Demonstration"
-  - "Production Readiness Checklist"
+  - "ConvergenceWarning & Cách khắc phục tối ưu hóa"
+  - "Phòng tránh rò rỉ dữ liệu với Pipeline"
+  - "Đa cộng tuyến & Hệ số phóng đại phương sai (VIF)"
+  - "Tự tính VIF & minh họa rò rỉ dữ liệu bằng số liệu"
+  - "Danh mục kiểm tra sẵn sàng triển khai"
 ---
 
 # Các Lỗi Thường Gặp, Cách Khắc Phục & Quy Chuẩn Thực Chiến Trong Logistic Regression
