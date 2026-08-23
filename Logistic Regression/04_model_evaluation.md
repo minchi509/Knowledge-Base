@@ -6,12 +6,11 @@ doc_id: "logreg_04"
 source_url: "https://scikit-learn.org/stable/modules/model_evaluation.html"
 scikit_learn_version: "1.4"
 key_concepts:
-  - "Confusion Matrix (TP, TN, FP, FN)"
-  - "Accuracy, Precision, Recall, F1-Score"
-  - "ROC Curve & ROC-AUC Score"
-  - "Precision-Recall (PR) Curve"
-  - "From-Scratch Metric Calculations in NumPy"
-  - "Standard Evaluation Routine with Scikit-Learn & Matplotlib"
+  - "ConvergenceWarning & Cách khắc phục tối ưu hóa"
+  - "Phòng tránh rò rỉ dữ liệu với Pipeline"
+  - "Đa cộng tuyến & Hệ số phóng đại phương sai (VIF)"
+  - "Tự tính VIF & minh họa rò rỉ dữ liệu bằng số liệu"
+  - "Danh mục kiểm tra sẵn sàng triển khai"
 ---
 
 # Đánh Giá Mô Hình & Chẩn Đoán Phân Loại Cho Logistic Regression
