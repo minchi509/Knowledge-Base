@@ -6,11 +6,11 @@ doc_id: "logreg_02"
 source_url: "https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html"
 scikit_learn_version: "1.4"
 key_concepts:
-  - "Batch Gradient Descent & Vectorization"
-  - "Log Loss & Sigmoid Activation"
-  - "Scikit-Learn API & Solvers Compatibility"
-  - "Hyperparameter Tuning (C, Penalty, Solvers)"
-  - "Production Pipeline & Preprocessing"
+  - "Gradient Descent theo lô & Vector hóa"
+  - "Log Loss & Hàm kích hoạt Sigmoid"
+  - "Scikit-Learn API & khả năng tương thích Solver"
+  - "Tinh chỉnh siêu tham số (C, Penalty, Solver)"
+  - "Pipeline thực chiến & Tiền xử lý"
 ---
 
 # Cài Đặt Thuật Toán & Scikit-Learn API: Từ Tự Code (Scratch) Đến Thực Chiến (Production)
