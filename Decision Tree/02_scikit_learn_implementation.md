@@ -3,71 +3,142 @@ topic: "Decision Tree"
 subtopic: "Scikit-Learn API, Hyperparameters & Tuning"
 level: "Intermediate"
 doc_id: "dt_02"
-sources:
-  - "Scikit-Learn v1.4 API Reference: sklearn.tree.DecisionTreeClassifier"
+source_url: "https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html"
 key_concepts:
-  - "DecisionTreeClassifier"
-  - "max_depth"
-  - "min_samples_split"
-  - "min_samples_leaf"
-  - "class_weight"
+  - "Lớp DecisionTreeClassifier"
+  - "Tham số max_depth (Độ sâu tối đa)"
+  - "Tham số min_samples_split (Số mẫu tối thiểu để tách nút)"
+  - "Tham số min_samples_leaf (Số mẫu tối thiểu tại nút lá)"
+  - "Xử lý mất cân bằng lớp (class_weight)"
+  - "Tinh chỉnh siêu tham số với GridSearchCV"
 ---
 
-# Scikit-Learn API & Hyperparameter Matrix
+# API Scikit-Learn & Ma Trận Siêu Tham Số
 
-## 1. Main Class Specification
-Lớp chính: `sklearn.tree.DecisionTreeClassifier`.
-Các phương thức cốt lõi tương tự như Logistic Regression:
-* `.fit(X, y)`: Xây dựng cây từ tập huấn luyện.
-* `.predict(X)`: Suy luận nhãn bằng cách duyệt từ rễ đến lá.
-* `.predict_proba(X)`: Trả về xác suất thuộc các lớp (chính là tỉ lệ $p_{mk}$ của các lớp tại nút lá chứa mẫu đó).
-* `.apply(X)`: Trả về chỉ số (index) của nút lá mà mỗi mẫu dữ liệu rơi vào.
+## 1. Đặc Tả Lớp (`sklearn.tree.DecisionTreeClassifier`)
 
-## 2. Hyperparameter Configuration Matrix
-Mô hình cây tự do (không tinh chỉnh) mặc định sẽ học thuộc lòng (memorize) toàn bộ dữ liệu, dẫn đến tỷ lệ lỗi trên tập Test rất cao. Dưới đây là các tham số dùng để kiểm soát (Regularization):
+Lớp chính được sử dụng để xây dựng mô hình Cây quyết định cho bài toán Phân loại trong Python là `DecisionTreeClassifier`.
 
-| Tham số | Kiểu dữ liệu | Mặc định | Mức độ ảnh hưởng & Hướng dẫn sử dụng |
-| :--- | :--- | :--- | :--- |
-| `criterion` | `str` | `'gini'` | Hàm đánh giá phân tách: `'gini'`, `'entropy'`, `'log_loss'`. Thường `'gini'` đủ tốt và tính toán nhanh hơn. |
-| `max_depth` | `int` | `None` | Rất quan trọng. Độ sâu tối đa của cây. Nếu `None`, cây phát triển cho đến khi các lá có Gini=0. Nên bắt đầu GridSearch từ $[3, 5, 7, 10]$. |
-| `min_samples_split` | `int` / `float` | `2` | Số mẫu tối thiểu một nút cần có để được phép tách tiếp. Tăng lên (ví dụ $10-50$) giúp hạn chế học nhiễu. |
-| `min_samples_leaf` | `int` / `float` | `1` | Số lượng mẫu tối thiểu phải tồn tại ở một nút lá. Tăng lên (ví dụ $5-20$) giúp làm mượt dự đoán, triệt tiêu các lá lẻ tẻ. |
-| `max_features` | `int` / `str` | `None` | Số lượng features tối đa xét đến khi tách. Dùng `'sqrt'` hoặc `'log2'` để giảm tính toán và tránh cây bị phụ thuộc quá nhiều vào 1 feature. |
-| `class_weight`| `dict` / `str`| `None` | Xử lý mất cân bằng lớp. Cấu hình `'balanced'` tự động nhân trọng số tỷ lệ nghịch với tần suất lớp vào công thức tính Gini. |
+### Các Phương Thức Cốt Lõi
 
-## 3. Complete Production Executable Pipeline
+- **`.fit(X, y)`**: Xây dựng cây quyết định từ tập dữ liệu huấn luyện.
+- **`.predict(X)`**: Dự đoán nhãn lớp cho các mẫu mới bằng cách cho mẫu chạy từ nút gốc (Root) xuống nút lá (Leaf).
+- **`.predict_proba(X)`**: Trả về xác suất thuộc từng lớp. Tỷ lệ này chính là phân phối xác suất $p_{mk}$ của các lớp nhãn tại nút lá mà mẫu đó rơi vào.
+- **`.apply(X)`**: Trả về chỉ số (Index) của nút lá mà mỗi mẫu dữ liệu rơi vào. Rất hữu ích khi muốn phân tích cấu trúc cây.
+- **`.cost_complexity_pruning_path(X, y)`**: Tính toán chuỗi tham số phạt độ phức tạp $\alpha$ (`ccp_alpha`) phục vụ cho kỹ thuật Cắt tỉa sau (Post-pruning).
+
+---
+
+## 2. Ma Trận Siêu Tham Số & Cách Chống Quá Khớp
+
+Một cây quyết định mặc định không giới hạn sẽ tự do phát triển cho đến khi nhớ sạch toàn bộ tập train (Overfitting). Để kiểm soát mô hình, ta điều chỉnh các siêu tham số (Hyperparameters) theo các nhóm chức năng sau:
+
+| Siêu tham số | Kiểu dữ liệu | Mặc định | Ý nghĩa trực quan & Hướng dẫn sử dụng |
+| --- | --- | --- | --- |
+| `criterion` | `str` | `'gini'` | Tiêu chí đo độ bất thuần: `'gini'`, `'entropy'`, hoặc `'log_loss'`. Thường `'gini'` chạy nhanh hơn và cho kết quả tương đương. |
+| `max_depth` | `int` | `None` | **Độ sâu tối đa của cây.** Giới hạn số lượng câu hỏi nối tiếp. Bắt đầu thử từ khoảng $[3, 5, 7, 10]$ để tránh cây quá sâu. |
+| `min_samples_split` | `int` / `float` | `2` | **Số mẫu tối thiểu tại một nút nội bộ để ĐƯỢC PHÉP TÁCH.** Tăng lên (ví dụ $10 - 50$) để chặn cây tạo nhánh lẻ tẻ. |
+| `min_samples_leaf` | `int` / `float` | `1` | **Số mẫu tối thiểu BẮT BUỘC có tại một nút lá.** Tăng lên (ví dụ $5 - 20$) giúp làm mượt dự đoán, triệt tiêu lá chứa mẫu nhiễu. |
+| `max_features` | `int` / `str` | `None` | Số lượng đặc trưng tối đa được xét khi tìm phép tách. Dùng `'sqrt'` hoặc `'log2'` để giảm tính toán và tăng tính đa dạng. |
+| `class_weight` | `dict` / `str` | `None` | **Xử lý mất cân bằng lớp (Imbalanced Data).** Truyền `'balanced'` để tự động tăng trọng số cho các lớp yếu/ít mẫu. |
+
+### Phân Biệt `min_samples_split` Và `min_samples_leaf` (Dành Cho Người Mới)
+
+- **`min_samples_split` (Điều kiện Nút Cha):** Kiểm tra xem nút hiện tại có đủ dữ liệu để *tiến hành chia câu hỏi* hay không.
+- **`min_samples_leaf` (Điều kiện Nút Con):** Đảm bảo rằng *sau khi chia*, cả 2 nút con sinh ra đều phải chứa tối thiểu số lượng mẫu quy định. Nếu 1 trong 2 nút con không đủ, phép chia sẽ bị hủy.
+
+---
+
+## 3. Tinh Chỉnh Siêu Tham Số Với `GridSearchCV`
+
+Thay vì đoán mò siêu tham số, ta sử dụng **GridSearchCV** để thử nghiệm tự động tất cả các kết hợp và tìm ra bộ tham số tối ưu nhất dựa trên Kiểm chứng chéo (Cross-Validation).
+
+```python
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import GridSearchCV, train_test_split
+from sklearn.tree import DecisionTreeClassifier
+
+# 1. Tải dữ liệu ví dụ (Ung thư vú)
+X, y = load_breast_cancer(return_X_y=True)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y
+)
+
+# 2. Khai báo không gian siêu tham số cần thử nghiệm (Param Grid)
+param_grid = {
+    'max_depth': [3, 5, 7, 10, None],
+    'min_samples_split': [2, 10, 20],
+    'min_samples_leaf': [1, 5, 10],
+    'criterion': ['gini', 'entropy']
+}
+
+# 3. Khởi tạo GridSearchCV với 5-Fold Cross Validation
+grid_search = GridSearchCV(
+    estimator=DecisionTreeClassifier(random_state=42),
+    param_grid=param_grid,
+    cv=5,
+    scoring='roc_auc',
+    n_jobs=-1
+)
+
+# 4. Huấn luyện để tìm bộ tham số tốt nhất
+grid_search.fit(X_train, y_train)
+
+print(f"Bộ tham số tối ưu nhất: {grid_search.best_params_}")
+print(f"Điểm ROC-AUC CV tốt nhất: {grid_search.best_score_:.4f}")
+```
+
+---
+
+## 4. Pipeline Thực Chiến Hoàn Chỉnh
+
+Dưới đây là mã nguồn chuẩn hoàn chỉnh trong thực tế: Kết hợp Pipeline, huấn luyện, dự đoán và xuất báo cáo đánh giá chi tiết.
 
 ```python
 import numpy as np
 import pandas as pd
 from sklearn.datasets import make_classification
-from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.pipeline import Pipeline
 from sklearn.metrics import classification_report, roc_auc_score
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
+from sklearn.tree import DecisionTreeClassifier
 
-# 1. Dữ liệu giả lập
-X, y = make_classification(n_samples=1500, n_features=12, random_state=42)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# 1. Tự động sinh dữ liệu giả lập cho bài toán Phân loại
+X, y = make_classification(
+    n_samples=1500,
+    n_features=12,
+    n_informative=8,
+    n_classes=2,
+    weights=[0.7, 0.3],  # Dữ liệu hơi mất cân bằng (70% - 30%)
+    random_state=42
+)
 
-# 2. Định nghĩa Pipeline
-# Lưu ý: Bỏ qua StandardScaler vì Decision Tree không cần
+# Chia tập Train / Test
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y
+)
+
+# 2. Xây dựng Pipeline
+# Lưu ý: Decision Tree KHÔNG yêu cầu Chuẩn hóa dữ liệu (StandardScaler)
 pipeline = Pipeline([
     ('model', DecisionTreeClassifier(
         criterion='gini',
-        max_depth=6,
+        max_depth=5,
         min_samples_split=15,
         min_samples_leaf=5,
-        class_weight='balanced',
+        class_weight='balanced',  # Tự động điều chỉnh trọng số cho lớp thiểu số
         random_state=42
     ))
 ])
 
-# 3. Huấn luyện và Đánh giá
+# 3. Huấn luyện Mô hình
 pipeline.fit(X_train, y_train)
+
+# 4. Dự đoán và Đánh giá Performance
 y_pred = pipeline.predict(X_test)
 y_proba = pipeline.predict_proba(X_test)[:, 1]
 
-print("=== CLASSIFICATION REPORT ===")
+print("=== BÁO CÁO ĐÁNH GIÁ MÔ HÌNH (CLASSIFICATION REPORT) ===")
 print(classification_report(y_test, y_pred))
-print(f"ROC-AUC Score: {roc_auc_score(y_test, y_proba):.4f}")
+print(f"Chỉ số ROC-AUC Score: {roc_auc_score(y_test, y_proba):.4f}")
+```
